@@ -29,10 +29,10 @@ import javax.persistence.criteria.*;
 import javax.persistence.metamodel.EntityType;
 import java.util.List;
 
-@Repository
+//@Repository
 public class MoviesRepository {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+  /*  private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -120,5 +120,5 @@ public class MoviesRepository {
 
     public void clean() {
         entityManager.createQuery("delete from Movie").executeUpdate();
-    }
+    }*/
 }

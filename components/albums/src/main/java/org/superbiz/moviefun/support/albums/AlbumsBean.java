@@ -34,6 +34,11 @@ public class AlbumsBean {
         entityManager.persist(album);
     }
 
+    @Transactional
+    public void addAlbumCover(AlbumInfo album) {
+        entityManager.persist(album);
+    }
+
     public AlbumInfo find(long id) {
         return entityManager.find(AlbumInfo.class, id);
     }

@@ -15,12 +15,13 @@ import org.superbiz.moviefun.support.blobstore.BlobStore;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static java.lang.String.format;
 
-@Controller
+@RestController
 @RequestMapping("/albums")
 public class AlbumsController {
 
@@ -35,15 +36,23 @@ public class AlbumsController {
 
 
     @GetMapping
-    public String index(Map<String, Object> model) {
-        model.put("albums", albumsBean.getAlbums());
-        return "albums";
+    public List<AlbumInfo> index(Map<String, Object> model) {
+        /*model.put("albums", albumsBean.getAlbums());
+        return "albums";*/
+        return albumsBean.getAlbums();
     }
 
     @GetMapping("/{albumId}")
-    public String details(@PathVariable long albumId, Map<String, Object> model) {
-        model.put("album", albumsBean.find(albumId));
-        return "albumDetails";
+    public AlbumInfo details(@PathVariable long albumId, Map<String, Object> model) {
+     /*   model.put("album", albumsBean.find(albumId));
+        return "albumDetails";*/
+        return albumsBean.find(albumId);
+    }
+
+
+    @PostMapping
+    public void addAlbumInfo(@RequestBody AlbumInfo albumInfo) {
+        albumsBean.addAlbumInfo(albumInfo);
     }
 
     @PostMapping("/{albumId}/cover")

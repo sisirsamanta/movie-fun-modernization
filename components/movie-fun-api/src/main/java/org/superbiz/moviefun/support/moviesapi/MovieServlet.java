@@ -36,9 +36,9 @@ public class MovieServlet extends HttpServlet {
 
     public static int PAGE_SIZE = 5;
 
-    private MoviesRepository moviesRepository;
+    private MoviesClient moviesRepository;
 
-    public MovieServlet(MoviesRepository moviesRepository) {
+    public MovieServlet(MoviesClient moviesRepository) {
         this.moviesRepository = moviesRepository;
     }
 
@@ -65,7 +65,7 @@ public class MovieServlet extends HttpServlet {
 
             MovieInfo movieInfo = new MovieInfo(title, director, genre, rating, year);
 
-            moviesRepository.addMovie(movieInfo);
+            moviesRepository.addMovieInfo(movieInfo);
             response.sendRedirect("moviefun");
             return;
 
@@ -73,7 +73,7 @@ public class MovieServlet extends HttpServlet {
 
             String[] ids = request.getParameterValues("id");
             for (String id : ids) {
-                moviesRepository.deleteMovieId(new Long(id));
+                moviesRepository.find(new Long(id));
             }
 
             response.sendRedirect("moviefun");
