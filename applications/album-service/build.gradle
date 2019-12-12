@@ -4,10 +4,11 @@ apply plugin: "io.spring.dependency-management"
 
 group = "org.superbiz"
 version = "1.1.0-SNAPSHOT"
-description = "OpenEJB :: Web Examples :: MovieService"
+description = "OpenEJB :: Web Examples :: AlbumService"
 
 dependencies {
-    compile project(":components:movies")
+    compile project(":components:albums")
+    compile project(":components:cf-support")
     compile "org.springframework.boot:spring-boot-starter-web"
     compile "org.springframework.boot:spring-boot-starter-data-jpa"
     compile "mysql:mysql-connector-java:5.1.40"

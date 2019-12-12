@@ -1,0 +1,91 @@
+package org.superbiz.moviefun.support.albums;
+
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.superbiz.moviefun.support.CsvUtils;
+import org.superbiz.moviefun.support.blobstore.Blob;
+import org.superbiz.moviefun.support.blobstore.BlobStore;
+
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import static com.fasterxml.jackson.dataformat.csv.CsvSchema.ColumnType;
+import static com.fasterxml.jackson.dataformat.csv.CsvSchema.builder;
+
+@Service
+public class AlbumsUpdater {
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final ObjectReader objectReader;
+    private final BlobStore blobStore;
+    private final AlbumsBean albumsBean;
+
+    public AlbumsUpdater(BlobStore blobStore, AlbumsBean albumsBean) {
+        this.blobStore = blobStore;
+        this.albumsBean = albumsBean;
+
+        CsvSchema schema = builder()
+            .addColumn("artist")
+            .addColumn("title")
+            .addColumn("year", ColumnType.NUMBER)
+            .addColumn("rating", ColumnType.NUMBER)
+            .build();
+
+        objectReader = new CsvMapper().readerFor(AlbumInfo.class).with(schema);
+    }
+
+    public void update() throws IOException {
+        Optional<Blob> maybeBlob = blobStore.get("albums.csv");
+
+        if (!maybeBlob.isPresent()) {
+            logger.info("No albums.csv found when running AlbumsUpdater!");
+            return;
+        }
+
+        List<AlbumInfo> albumsToHave = CsvUtils.readFromCsv(objectReader, maybeBlob.get().inputStream);
+        List<AlbumInfo> albumsWeHave = albumsBean.getAlbums();
+
+        createNewAlbums(albumsToHave, albumsWeHave);
+        deleteOldAlbums(albumsToHave, albumsWeHave);
+        updateExistingAlbums(albumsToHave, albumsWeHave);
+    }
+
+
+    private void createNewAlbums(List<AlbumInfo> albumsToHave, List<AlbumInfo> albumsWeHave) {
+        Stream<AlbumInfo> albumsToCreate = albumsToHave
+            .stream()
+            .filter(album -> albumsWeHave.stream().noneMatch(album::isEquivalent));
+
+        albumsToCreate.forEach(albumsBean::addAlbumInfo);
+    }
+
+    private void deleteOldAlbums(List<AlbumInfo> albumsToHave, List<AlbumInfo> albumsWeHave) {
+        Stream<AlbumInfo> albumsToDelete = albumsWeHave
+            .stream()
+            .filter(album -> albumsToHave.stream().noneMatch(album::isEquivalent));
+
+        albumsToDelete.forEach(albumsBean::deleteAlbumInfo);
+    }
+
+    private void updateExistingAlbums(List<AlbumInfo> albumsToHave, List<AlbumInfo> albumsWeHave) {
+        Stream<AlbumInfo> albumsToUpdate = albumsToHave
+            .stream()
+            .map(album -> addIdToAlbumIfExists(albumsWeHave, album))
+            .filter(AlbumInfo::hasId);
+
+        albumsToUpdate.forEach(albumsBean::updateAlbumInfo);
+    }
+
+    private AlbumInfo addIdToAlbumIfExists(List<AlbumInfo> existingAlbums, AlbumInfo album) {
+        Optional<AlbumInfo> maybeExisting = existingAlbums.stream().filter(album::isEquivalent).findFirst();
+        maybeExisting.ifPresent(existing -> album.setId(existing.getId()));
+        return album;
+    }
+}
